@@ -27,7 +27,7 @@ class AITemplateModelWrapper(torch.nn.Module):
         c_crossattn = None,
         c_concat = None,
         control = None,
-        c_adm = None,
+        y = None,
         transformer_options = None,
     ):
         timesteps_pt = t
@@ -43,8 +43,8 @@ class AITemplateModelWrapper(torch.nn.Module):
         if control is not None:
             down_block_residuals = control["output"]
             mid_block_residual = control["middle"][0]
-        if c_adm is not None:
-            add_embeds = c_adm
+        if y is not None:
+            add_embeds = y
         return unet_inference(
             self.unet_ait_exe,
             latent_model_input=latent_model_input,

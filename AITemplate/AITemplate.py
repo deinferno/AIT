@@ -286,14 +286,14 @@ def sample(model, noise, steps, cfg, sampler_name, scheduler, positive, negative
     noise = noise.to(device)
     latent_image = latent_image.to(device)
 
-    positive_copy = comfy.sample.broadcast_cond(positive, noise.shape[0], device)
-    negative_copy = comfy.sample.broadcast_cond(negative, noise.shape[0], device)
+    positive = comfy.sample.convert_cond(positive)
+    negative = comfy.sample.convert_cond(negative)
 
     models = load_additional_models(positive, negative)
 
     sampler = comfy.samplers.KSampler(real_model, steps=steps, device=device, sampler=sampler_name, scheduler=scheduler, denoise=denoise, model_options=model.model_options)
 
-    samples = sampler.sample(noise, positive_copy, negative_copy, cfg=cfg, latent_image=latent_image, start_step=start_step, last_step=last_step, force_full_denoise=force_full_denoise, denoise_mask=noise_mask, sigmas=sigmas, callback=callback, disable_pbar=disable_pbar, seed=seed)
+    samples = sampler.sample(noise, positive, negative, cfg=cfg, latent_image=latent_image, start_step=start_step, last_step=last_step, force_full_denoise=force_full_denoise, denoise_mask=noise_mask, sigmas=sigmas, callback=callback, disable_pbar=disable_pbar, seed=seed)
     samples = samples.cpu()
 
     comfy.sample.cleanup_additional_models(models)
@@ -408,7 +408,7 @@ class ControlNet(ControlBase):
             with precision_scope(comfy.model_management.get_autocast_device(self.device)):
                 comfy.model_management.load_models_gpu([self.control_model_wrapped])
                 context = cond['c_crossattn'].to(self.device)
-                y = cond.get('c_adm', None)
+                y = cond.get('y', None)
                 control = self.control_model(x=x_noisy.to(self.device), hint=self.cond_hint, timesteps=t, context=context.to(self.device), y=y)
         else:
             # AITemplate inference, returns the same as regular
